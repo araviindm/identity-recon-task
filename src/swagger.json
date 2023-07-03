@@ -7,7 +7,8 @@
   "paths": {
     "/api/init": {
       "post": {
-        "summary": "To initialize the database with two entries",
+        "summary": "Init",
+        "description": "To initialize the database with two entries",
         "tags": ["Contacts"],
         "requestBody": {
           "required": false
@@ -24,7 +25,8 @@
     },
     "/api/identify": {
       "post": {
-        "summary": "Returns customer identity across multiple contacts",
+        "summary": "Identify",
+        "description": "Returns customer identity across multiple contacts",
         "tags": ["Contacts"],
         "requestBody": {
           "required": true,

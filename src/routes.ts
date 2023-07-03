@@ -1,4 +1,3 @@
-// routes.ts
 import { Request, Response } from "express";
 import { Contact, IdentifyRequest } from "./models";
 import { getClient } from "./db";
@@ -62,14 +61,72 @@ export const identify = async (
 
       res.status(200).json(response);
     } else {
+      const primaryContact = contacts.find(
+        (contact) => contact.linkedId === null
+      );
+      const primaryContactId = primaryContact?.id;
+
+      const secondaryContacts = contacts.filter(
+        (contact) => contact.linkedId === primaryContactId
+      );
+
+      let newSecondaryContact: Contact | undefined;
+      let isContactExists: boolean = false;
+
+      if (email) {
+        isContactExists = contacts.some(
+          (contact) => contact.email === email && contact.email !== null
+        );
+      } else if (phoneNumber) {
+        isContactExists = contacts.some(
+          (contact) =>
+            contact.phoneNumber === phoneNumber && contact.phoneNumber !== null
+        );
+      }
+      if (!isContactExists) {
+        const insertQuery = `
+          INSERT INTO "contacts" ("email", "phoneNumber", "linkedId", "linkPrecedence", "createdAt", "updatedAt", "deletedAt")
+          VALUES ($1, $2, $3, 'secondary', NOW(), NOW(), NULL)
+          RETURNING "id"
+        `;
+        const insertValues = [email, phoneNumber, primaryContactId];
+        const insertResult = await client.query<Contact>(
+          insertQuery,
+          insertValues
+        );
+        newSecondaryContact = insertResult.rows[0];
+      }
+      const secondaryContactIds = secondaryContacts.map(
+        (contact) => contact.id
+      );
+      if (newSecondaryContact?.id) {
+        secondaryContacts.push(newSecondaryContact);
+        secondaryContactIds.push(newSecondaryContact.id);
+      }
+
+      const emailSet = new Set([
+        primaryContact?.email,
+        ...secondaryContacts.map((contact) => contact.email).filter(Boolean),
+      ]);
+      const emails = Array.from(emailSet);
+
+      const phoneNumberSet = new Set([
+        primaryContact?.phoneNumber,
+        ...secondaryContacts
+          .map((contact) => contact.phoneNumber)
+          .filter(Boolean),
+      ]);
+      const phoneNumbers = Array.from(phoneNumberSet);
+
       const response = {
         contact: {
-          primaryContactId: "",
-          emails: "",
-          phoneNumbers: "",
-          secondaryContactIds: [],
+          primaryContactId,
+          emails,
+          phoneNumbers,
+          secondaryContactIds,
         },
       };
+
       res.status(200).json(response);
     }
   } catch (error) {
