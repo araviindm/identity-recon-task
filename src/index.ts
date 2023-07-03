@@ -1,7 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { connectToDatabase, disconnectDatabase } from "./db";
-import { identify, initDataBase } from "./routes";
+import { identify } from "./routes";
+import { initDataBase } from "./routes";
 import swaggerUi from "swagger-ui-express";
 import * as swaggerDocument from "./swagger.json";
 import dotenv from "dotenv";

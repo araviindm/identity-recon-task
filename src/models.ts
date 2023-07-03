@@ -1,26 +1,15 @@
 export interface Contact {
   id: number;
-  phoneNumber?: string;
-  email?: string;
-  linkedId?: number;
-  linkPrecedence: LinkPrecedence;
+  phoneNumber: string | null;
+  email: string | null;
+  linkedId: number | null;
+  linkPrecedence: "primary" | "secondary";
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date;
-}
-enum LinkPrecedence {
-  primary = "primary",
-  secondary = "secondary",
+  deletedAt: Date | null;
 }
 
 export interface IdentifyRequest {
-  email?: string;
-  phoneNumber?: number;
-}
-
-export interface IdentifyResponse {
-  primaryContatctId: number;
-  emails: string[];
-  phoneNumbers: string[];
-  secondaryContactIds: number[];
+  email: string | null;
+  phoneNumber: string | null;
 }

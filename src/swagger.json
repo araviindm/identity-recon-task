@@ -41,7 +41,8 @@
                     "type": "string",
                     "pattern": "^[0-9]{10}$"
                   }
-                }
+                },
+                "required": ["email", "phoneNumber"]
               }
             }
           }
