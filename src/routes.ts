@@ -61,18 +61,38 @@ export const identify = async (
 
       res.status(200).json(response);
     } else {
-      const primaryContact = contacts.find(
-        (contact) => contact.linkedId === null
-      );
+      let primaryContact: Contact | undefined;
+      primaryContact = contacts.find((contact) => contact.linkedId === null);
+      if (!primaryContact) {
+        const primaryContactId = contacts[0].linkedId;
+        const primaryContactQuery = `
+          SELECT *
+          FROM "contacts"
+          WHERE "id" = $1
+        `;
+        const primaryContactValues = [primaryContactId];
+        const primaryContactResult = await client.query<Contact>(
+          primaryContactQuery,
+          primaryContactValues
+        );
+
+        primaryContact = primaryContactResult.rows[0];
+      }
       const primaryContactId = primaryContact?.id;
 
-      const secondaryContacts = contacts.filter(
-        (contact) => contact.linkedId === primaryContactId
+      const secondaryContactsQuery = `
+          SELECT *
+          FROM "contacts"
+          WHERE "linkedId" = $1
+        `;
+      const secondaryContactsValues = [primaryContactId];
+      const secondaryContactsResult = await client.query<Contact>(
+        secondaryContactsQuery,
+        secondaryContactsValues
       );
+      const secondaryContacts = secondaryContactsResult.rows;
 
-      let newSecondaryContact: Contact | undefined;
       let isContactExists: boolean = false;
-
       if (email) {
         isContactExists = contacts.some(
           (contact) => contact.email === email && contact.email !== null
@@ -83,6 +103,8 @@ export const identify = async (
             contact.phoneNumber === phoneNumber && contact.phoneNumber !== null
         );
       }
+      let newSecondaryContact: Contact | undefined;
+      let result;
       if (!isContactExists) {
         const insertQuery = `
           INSERT INTO "contacts" ("email", "phoneNumber", "linkedId", "linkPrecedence", "createdAt", "updatedAt", "deletedAt")
@@ -90,18 +112,28 @@ export const identify = async (
           RETURNING "id"
         `;
         const insertValues = [email, phoneNumber, primaryContactId];
-        const insertResult = await client.query<Contact>(
-          insertQuery,
-          insertValues
+        const insertResult = await client.query(insertQuery, insertValues);
+        result = insertResult.rows[0];
+        const secondaryContactsQuery = `
+          SELECT *
+          FROM "contacts"
+          WHERE "id" = $1
+        `;
+        const secondaryContactsValues = [result.id];
+        const secondaryContactsResult = await client.query<Contact>(
+          secondaryContactsQuery,
+          secondaryContactsValues
         );
-        newSecondaryContact = insertResult.rows[0];
+        newSecondaryContact = secondaryContactsResult.rows[0];
       }
       const secondaryContactIds = secondaryContacts.map(
         (contact) => contact.id
       );
-      if (newSecondaryContact?.id) {
-        secondaryContacts.push(newSecondaryContact);
-        secondaryContactIds.push(newSecondaryContact.id);
+      if (result?.id) {
+        secondaryContactIds.push(result.id);
+      }
+      if (newSecondaryContact) {
+        secondaryContacts.push(newSecondaryContact!);
       }
 
       const emailSet = new Set([
