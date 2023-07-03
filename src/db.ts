@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Connect to ElephantSQL PostgreSQL database
-export const client = new Client({
+const client = new Client({
   connectionString: process.env.DB_CONNECTION_STRING,
 });
 
@@ -16,3 +16,17 @@ export const connectToDatabase = async () => {
     console.error("Error connecting to ElephantSQL:", err);
   }
 };
+
+export async function disconnectDatabase() {
+  try {
+    await client.end();
+    console.log("Disconnected from the ElephantSQL");
+  } catch (error) {
+    console.error("Error disconnecting from the ElephantSQL:", error);
+    throw error;
+  }
+}
+
+export function getClient() {
+  return client;
+}

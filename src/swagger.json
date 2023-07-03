@@ -1,17 +1,54 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
   "info": {
-    "title": "My API",
+    "title": "Identity recon APIs",
     "version": "1.0.0"
   },
   "paths": {
-    "/api/hello": {
-      "get": {
-        "summary": "GetHello",
-        "description": "To check if app is working",
+    "/api/init": {
+      "post": {
+        "summary": "To initialize the database with two entries",
+        "tags": ["Contacts"],
+        "requestBody": {
+          "required": false
+        },
         "responses": {
           "200": {
-            "description": "Successful response"
+            "description": "Fetched the combined customer contact"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/identify": {
+      "post": {
+        "summary": "Returns customer identity across multiple contacts",
+        "tags": ["Contacts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "pattern": "^[0-9]{10}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fetched the combined customer contact"
           },
           "404": {
             "description": "Not found"
