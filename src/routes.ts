@@ -25,17 +25,18 @@ export const identify = async (
     if (phoneNumber) {
       if (email) {
         query += `
-          OR "phoneNumber" = $2
+          OR "phoneNumber" = $${values.length + 1}
         `;
       } else {
         query += `
-          WHERE "phoneNumber" = $1
+          WHERE "phoneNumber" = $${values.length + 1}
         `;
       }
       values.push(phoneNumber);
     }
     const result = await client.query<Contact>(query, values);
     const contacts = result.rows;
+
     if (contacts.length === 0) {
       // Create a new primary contact
       const insertQuery = `
@@ -91,7 +92,6 @@ export const identify = async (
           primaryContact = primaryContactResult.rows[0];
         }
         const primaryContactId = primaryContact?.id;
-
         const secondaryContactsQuery = `
           SELECT *
           FROM "contacts"
@@ -103,22 +103,13 @@ export const identify = async (
           secondaryContactsValues
         );
         const secondaryContacts = secondaryContactsResult.rows;
-
-        let isContactExists: boolean = false;
-        if (email) {
-          isContactExists = contacts.some(
-            (contact) => contact.email === email && contact.email !== null
-          );
-        } else if (phoneNumber) {
-          isContactExists = contacts.some(
-            (contact) =>
-              contact.phoneNumber === phoneNumber &&
-              contact.phoneNumber !== null
-          );
-        }
+        const existingContact = contacts.find(
+          (contact) =>
+            contact.phoneNumber === phoneNumber || contact.email === email
+        );
         let newSecondaryContact: Contact | undefined;
         let result;
-        if (!isContactExists) {
+        if (existingContact) {
           const insertQuery = `
             INSERT INTO "contacts" ("email", "phoneNumber", "linkedId", "linkPrecedence", "createdAt", "updatedAt", "deletedAt")
             VALUES ($1, $2, $3, 'secondary', NOW(), NOW(), NULL)
@@ -174,6 +165,7 @@ export const identify = async (
 
         res.status(200).json(response);
       } else {
+        console.log("Two primary");
         // If there's two primary
         let primaryContactId: number | undefined;
         const emails: string[] = [];
