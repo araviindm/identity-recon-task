@@ -2,9 +2,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import { connectToDatabase, disconnectDatabase } from "./db";
 import { identify } from "./routes";
-import { initDataBase } from "./routes";
-import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./swagger.json";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -23,11 +20,7 @@ connectToDatabase().catch((error) => {
 });
 
 // API routes
-app.post("/api/init", initDataBase);
 app.post("/api/identify", identify);
-
-// Swagger UI documentation
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 process.on("SIGINT", async () => {
   try {
