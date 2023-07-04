@@ -1,14 +1,11 @@
 # Identity-recon-task
 
-It's just a task using express.
+It's just a task using express and typescript.
 
 # API Endpoint
 
-https://identity-recon-task.onrender.com/api/identify
+METHOD - POST
 
-# Sample Request body (POST Request)
+URL - https://identity-recon-task.onrender.com/api/identify
 
-{
-"email": "aravind@gmail.com",
-"phoneNumber": "1234567890"
-}
+Body - { "email": "aravind@gmail.com", "phoneNumber": "1234567890"}
